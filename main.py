@@ -183,6 +183,34 @@ def set_rsvp_deadline(
     
     return event
 
+#RSVP Status
+@app.get("/events/{event_id}/rsvp/status", response_model=RSVPResponse)
+def get_rsvp_status(
+    event_id: int,
+    email: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Get RSVP status for an event."""
+    
+    # Check if event exists
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Check if RSVP exists
+    rsvp = db.query(RSVP).filter(
+        RSVP.event_id == event_id,
+        RSVP.email == email
+    ).first()
+    
+    if not rsvp:
+        raise HTTPException(
+            status_code=404,
+            detail="RSVP not found"
+        )
+    
+    return rsvp
+
 # Cancel RSVP
 @app.delete("/events/{event_id}/rsvp", response_model=RSVPResponse)
 def cancel_rsvp(
