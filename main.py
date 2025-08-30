@@ -111,3 +111,53 @@ def get_event(event_id: int, db: Session = Depends(get_db)):
 
 # RSVP ENDPOINTS
 
+@app.post("/events/{event_id}/rsvp", response_model=RSVPResponse)
+def create_rsvp(
+    event_id: int,
+    name: str = Form(...),
+    email: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """RSVP to an event."""
+    
+    # Check if event exists
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Check if user already RSVPed (prevent duplicates)
+    existing_rsvp = db.query(RSVP).filter(
+        RSVP.event_id == event_id,
+        RSVP.email == email
+    ).first()
+    
+    if existing_rsvp:
+        raise HTTPException(
+            status_code=400, 
+            detail="You have already RSVPed to this event"
+        )
+        
+ # Create RSVP
+    db_rsvp = RSVP(
+        event_id=event_id,
+        name=name,
+        email=email
+    )
+    
+    db.add(db_rsvp)
+    db.commit()
+    db.refresh(db_rsvp)
+    
+    return db_rsvp
+
+@app.get("/events/{event_id}/rsvps", response_model=List[RSVPResponse])
+def get_event_rsvps(event_id: int, db: Session = Depends(get_db)):
+    """Get all RSVPs for a specific event."""
+    
+    # Check if event exists
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    rsvps = db.query(RSVP).filter(RSVP.event_id == event_id).all()
+    return rsvps
