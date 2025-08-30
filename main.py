@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Body
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import Optional, List
@@ -15,10 +15,10 @@ from schemas import EventCreate, EventResponse, RSVPCreate, RSVPResponse
 # Load environment variables
 load_dotenv()
 
-# Create database tables
+
 Base.metadata.create_all(bind=engine)
 
-# Initialize FastAPI
+
 app = FastAPI(title="Event_App API", version="1.0.0")
 
 # CORS middleware
@@ -30,7 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure Cloudinary
+#Cloudinary
 cloudinary.config(
     cloud_name=Settings.CLOUDINARY_CLOUD_NAME,
     api_key=Settings.CLOUDINARY_API_KEY,
@@ -46,14 +46,14 @@ def read_root():
 async def create_event(
     title: str = Form(...),
     description: str = Form(...),
-    date: str = Form(...),  # Expected format: YYYY-MM-DD HH:MM
+    date: str = Form(...),  # YYYY-MM-DD HH:MM
     location: str = Form(...),
     flyer: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
     """Create a new event with optional flyer upload."""
     
-    # Parse date string
+    
     try:
         event_date = datetime.strptime(date, "%Y-%m-%d %H:%M")
     except ValueError:
@@ -62,7 +62,7 @@ async def create_event(
             detail="Invalid date format. Use YYYY-MM-DD HH:MM"
         )
     
-    # flyer upload
+    
     flyer_url = None
     if flyer and flyer.filename:
         try:

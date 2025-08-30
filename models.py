@@ -14,7 +14,7 @@ class Event(Base):
     flyer_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=func.now())
     
-    # Relationship to RSVPs
+    # Relationships
     rsvps = relationship("RSVP", back_populates="event", cascade="all, delete-orphan")
 
 class RSVP(Base):
@@ -26,5 +26,4 @@ class RSVP(Base):
     email = Column(String(100), nullable=False)
     created_at = Column(DateTime, default=func.now())
     
-    # Relationship to Event
     event = relationship("Event", back_populates="rsvps")
