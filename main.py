@@ -161,3 +161,55 @@ def get_event_rsvps(event_id: int, db: Session = Depends(get_db)):
     
     rsvps = db.query(RSVP).filter(RSVP.event_id == event_id).all()
     return rsvps
+
+
+# RSVP Deadline
+@app.post("/events/{event_id}/rsvp/deadline", response_model=RSVPResponse)
+def set_rsvp_deadline(
+    event_id: int,
+    deadline: datetime = Body(...),
+    db: Session = Depends(get_db)
+):
+    """Set RSVP deadline for an event."""
+    
+    # Check if event exists
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    event.rsvp_deadline = deadline
+    db.commit()
+    db.refresh(event)
+    
+    return event
+
+# Cancel RSVP
+@app.delete("/events/{event_id}/rsvp", response_model=RSVPResponse)
+def cancel_rsvp(
+    event_id: int,
+    email: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """Cancel RSVP for an event."""
+    
+    # Check if event exists
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Check if RSVP exists
+    rsvp = db.query(RSVP).filter(
+        RSVP.event_id == event_id,
+        RSVP.email == email
+    ).first()
+    
+    if not rsvp:
+        raise HTTPException(
+            status_code=404,
+            detail="RSVP not found"
+        )
+    
+    db.delete(rsvp)
+    db.commit()
+    
+    return rsvp
